@@ -1,52 +1,65 @@
-version: "3.9"
+version: '3.9'
+
 services:
+  # PHP + Composer
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/php/Dockerfile
     container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www/html
     volumes:
       - .:/var/www/html
-      - vendor_data:/var/www/html/vendor
-      - node_modules_data:/var/www/html/node_modules
     networks:
       - laravel
-    depends_on:
-      - db
 
-  webserver:
+  # Nginx
+  nginx:
     image: nginx:alpine
     container_name: laravel_nginx
+    restart: unless-stopped
     ports:
-      - "8000:80"
+      - "8080:80"
     volumes:
       - .:/var/www/html
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
     networks:
       - laravel
 
-  db:
+  # MySQL
+  mysql:
     image: mysql:8.0
-    container_name: laravel_db
-    restart: always
+    container_name: laravel_mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel
       MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
-    ports:
-      - "3307:3306"
+      MYSQL_PASSWORD: laravel
     volumes:
-      - db_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - laravel
 
-networks:
-  laravel:
+  # Node (для npm run dev / build)
+  node:
+    image: node:20
+    container_name: laravel_node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: sh -c "npm install && npm run dev"
+    networks:
+      - laravel
 
 volumes:
-  db_data:
-  vendor_data:
-  node_modules_data:
+  mysql_data:
+
+networks:
+  laravel:
+    driver: bridge
