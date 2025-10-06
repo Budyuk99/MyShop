@@ -8,4 +8,11 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+        server: {
+        host: '0.0.0.0',  // Важно для Docker
+        port: 5173,
+        hmr: {
+            host: 'localhost',
+        },
+    },
 });
