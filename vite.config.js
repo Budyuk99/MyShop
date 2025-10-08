@@ -9,10 +9,16 @@ export default defineConfig({
         }),
     ],
         server: {
-        host: '0.0.0.0',  // Важно для Docker
+        host: '0.0.0.0',
         port: 5173,
+        strictPort: true,
+        watch: {
+        usePolling: true, // важно для Docker, чтобы следить за изменениями на хосте
+        },
         hmr: {
             host: 'localhost',
+            protocol: 'ws',
+            port: 5173,
         },
     },
 });
